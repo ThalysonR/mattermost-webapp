@@ -8,6 +8,7 @@ import {Posts} from 'mattermost-redux/constants';
 import {shallowWithIntl} from 'tests/helpers/intl-test-helper';
 
 import RhsComment from 'components/rhs_comment/rhs_comment.jsx';
+import EmojiMap from 'utils/emoji_map';
 
 jest.mock('utils/post_utils.jsx', () => ({
     isEdited: jest.fn().mockReturnValue(true),
@@ -58,15 +59,17 @@ describe('components/RhsComment', () => {
         channelIsArchived: false,
         isConsecutivePost: false,
         handleCardClick: jest.fn(),
+        shortcutReactToLastPostEmittedFrom: '',
         actions: {
             markPostAsUnread: jest.fn(),
         },
+        emojiMap: new EmojiMap(new Map())
     };
 
     test('should match snapshot', () => {
         const wrapper = shallowWithIntl(
             <RhsComment {...baseProps}/>
-        ).dive();
+        );
 
         expect(wrapper).toMatchSnapshot();
     });
@@ -74,7 +77,7 @@ describe('components/RhsComment', () => {
     test('should match snapshot hovered', () => {
         const wrapper = shallowWithIntl(
             <RhsComment {...baseProps}/>
-        ).dive();
+        );
 
         wrapper.setState({hover: true});
 
@@ -85,7 +88,7 @@ describe('components/RhsComment', () => {
         isMobile.mockImplementation(() => true);
         const wrapper = shallowWithIntl(
             <RhsComment {...baseProps}/>
-        ).dive();
+        );
 
         expect(wrapper).toMatchSnapshot();
     });
@@ -100,7 +103,7 @@ describe('components/RhsComment', () => {
         };
         const wrapper = shallowWithIntl(
             <RhsComment {...props}/>
-        ).dive();
+        );
         wrapper.setState({hover: true});
 
         expect(wrapper).toMatchSnapshot();
@@ -109,7 +112,7 @@ describe('components/RhsComment', () => {
     test('should show pointer when alt is held down', () => {
         const wrapper = shallowWithIntl(
             <RhsComment {...baseProps}/>
-        ).dive();
+        );
 
         expect(wrapper.find('.post.cursor--pointer').exists()).toBe(false);
 
@@ -118,10 +121,27 @@ describe('components/RhsComment', () => {
         expect(wrapper.find('.post.cursor--pointer').exists()).toBe(true);
     });
 
+    test('should not show pointer when alt is held down, but channel is archived', () => {
+        const props = {
+            ...baseProps,
+            channelIsArchived: true
+        };
+
+        const wrapper = shallowWithIntl(
+            <RhsComment {...props}/>
+        );
+
+        expect(wrapper.find('.post.cursor--pointer').exists()).toBe(false);
+
+        wrapper.setState({alt: true});
+
+        expect(wrapper.find('.post.cursor--pointer').exists()).toBe(false);
+    });
+
     test('should call markPostAsUnread when post is alt+clicked on', () => {
         const wrapper = shallowWithIntl(
             <RhsComment {...baseProps}/>
-        ).dive();
+        );
 
         wrapper.simulate('click', {altKey: false});
 
@@ -129,6 +149,25 @@ describe('components/RhsComment', () => {
 
         wrapper.simulate('click', {altKey: true});
 
-        expect(baseProps.actions.markPostAsUnread).toHaveBeenCalled();
+        expect(baseProps.actions.markPostAsUnread).toHaveBeenCalledWith(baseProps.post);
+    });
+
+    test('should not call markPostAsUnread when post is alt+clicked on when channel is archived', () => {
+        const props = {
+            ...baseProps,
+            channelIsArchived: true
+        };
+
+        const wrapper = shallowWithIntl(
+            <RhsComment {...props}/>
+        );
+
+        wrapper.simulate('click', {altKey: false});
+
+        expect(props.actions.markPostAsUnread).not.toHaveBeenCalled();
+
+        wrapper.simulate('click', {altKey: true});
+
+        expect(props.actions.markPostAsUnread).not.toHaveBeenCalled();
     });
 });

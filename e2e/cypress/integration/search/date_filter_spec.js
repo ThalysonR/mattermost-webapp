@@ -97,7 +97,7 @@ describe('SF15699 Search Date Filter', () => {
 
         // # Create another admin user so we can create posts from another user
         cy.get('@team').then((team) => {
-            cy.createNewUser({}, [team.id]).as('newAdmin');
+            cy.apiCreateNewUser({}, [team.id]).as('newAdmin');
         });
 
         // # Set user to be a sysadmin, so it can access the system console
@@ -224,7 +224,7 @@ describe('SF15699 Search Date Filter', () => {
 
             it('with "x"', () => {
                 cy.get('#searchBox').clear().wait(500).type(queryString);
-                cy.get('#searchClearButton').click();
+                cy.get('#searchFormContainer').find('.input-clear-x').click({force: true});
                 cy.get('#searchBox').should('have.value', '');
             });
         });
